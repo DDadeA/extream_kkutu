@@ -16,4 +16,4 @@ ___
 - 서버 주소는 index.html의 456 line에 있다. 수정해서 사용해야 한다.
 - 닉네임은 겹치면 안 된다.
 - <code>Tambourin.mp3</code>가 배경음악인데, 저작권 문제로 올리지 않았다.
-- <code>_id_ko.csv</code>는 끄투 db에서 잘라온 것이다. 공개된 db가 오래전의 것이라 최신 단어들은 없다.
+- <code>_id_ko.csv</code>는 [끄투 db](https://github.com/JJoriping/KKuTu/blob/master/db.sql)에서 잘라온 것이다. 공개된 db가 오래전의 것이라 최신 단어들은 없다. GPL 3.0은 이것 때문에 적용했다.
