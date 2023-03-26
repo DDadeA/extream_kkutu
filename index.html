@@ -1,0 +1,589 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8" name="viewport" content="width=device-width, initial-scale=1">
+	<link rel="stylesheet" href="https://unpkg.com/@picocss/pico@latest/css/pico.min.css">
+
+	<title>끝말잇기99</title>
+	<style type="text/css">
+		.user {
+			text-align: left;
+		}
+
+		.user > * {
+			display:inline-block;
+			vertical-align:middle;
+		}
+
+		.user_avatar {
+			width: 200px;
+			height: 100px;
+			text-align: center;
+		}
+
+		.avatar_img {
+			width: 80px;
+			height: 80px;
+		}
+
+		.message {
+			margin-bottom: 2%;
+			border-width: 3px;
+			border-style: solid;
+			height:4%;
+			padding: 0.5em;
+		}
+
+		.words > * {
+			display:inline-block;
+			vertical-align:middle;
+		}
+
+		.word {
+			border-width: 3px;
+			border-style: solid;
+			height:4%;
+			width: auto;
+			padding: 0.0em;
+		}
+		.message > * {
+			display:inline-block;
+			vertical-align:middle;
+		}
+
+		.letter {
+			transform: scale(1.5);
+			animation: scale 0.2s forwards;
+		}
+
+		#progress {
+			width: 100%;
+			background-color: white;
+		}
+
+		#bar {
+			width: 0%;
+			height: 30px;
+			background-color: green;
+		}
+	</style>
+
+	<style type="text/css">
+		@keyframes fading {
+			0% { opacity: 1; }
+			100% { opacity: 0; }
+		}
+		@keyframes bar {
+			0% { width: 100%; }
+			100% { width: 0%; }
+		}
+		@keyframes red {
+			0% { background-color: #ff000033; }
+			100% { background-color: transparent; }
+		}
+		@keyframes green {
+			0% { background-color: #00ffff33; }
+			100% { background-color: transparent; }
+		}
+		@keyframes scale {
+			100% {
+				transform: scale(1); }
+		}
+		@keyframes shake {
+			0%   { margin-left: 0px;
+				   margin-top: 0px;  }
+			50%  { margin-left: -4px;
+				   margin-top: -4px; }
+			100% { margin-left: 0px;
+				   margin-top: 0px;  }
+		}
+		@keyframes error {
+			0%   {
+				margin-left: 0px;  }
+			20%  {
+				margin-left: 10px;  }
+			40%  {
+				margin-left: 0px;  }
+			60%  {
+				margin-left: -15px;  }
+			80%  {
+				margin-left: 10px;  }
+			100% {
+				margin-left: 0px;  }
+		}
+	</style>
+
+</head>
+<body id="body">
+	<h1 style="text-align: center; margin: 0;" id="title_text">끝말잇기 99</h1>
+	<div id="progress"><div id="bar"></div></div>
+	<div id="main" style="margin-top: 0%; right: 10px;">
+	</div>
+
+	<div style="margin-bottom: 5%; width: 90%; position: fixed; bottom: 0; margin: 2%;">
+		<input id="main_input", placeholder="닉네임을 입력해주세요." autofocus>
+	</div>
+
+
+	<script type="text/javascript">
+		var bgm = new Audio('Tambourin.mp3');
+
+
+		function fadeRemove(element) {
+			element.style.animation = 'fading 0.5s';
+			setTimeout(function(){ element.remove() }, 500);
+		}
+
+		function shakediv() {
+			const div = document.getElementById('body');
+			div.style.animation = 'shake 0.04s';
+			setTimeout(function(){
+				div.style.animation = null;
+			}, 40);
+		}
+
+		//time = sec
+		function maintimer(time){
+			const timer = document.getElementById('bar');
+			timer.style.animation = 'bar ' + time +'s';
+
+			setTimeout(function(){
+				timer.style.animation = null;
+			}, time*1000);
+
+			//var audio = new Audio('Tambourin.mp3');
+			//audio.play();
+			bgm.play();
+		}
+
+		//
+		function userAnimate(username, animation, durationSec){
+			//get user_div
+			const user_div = document.getElementById(username);
+
+			//animate
+			user_div.style.animation = animation + ' ' + durationSec + 's';
+			setTimeout(function(){ user_div.style.animation = null }, durationSec*1000);
+
+		}
+
+		function error(username, text){
+			//get user_div
+			const user_div = document.getElementById(username);
+
+			addMessage(username, '오류: '+text);
+			userAnimate(username, 'error', 0.3);
+			
+			var audio = new Audio('error.mp3');
+			audio.play();
+		}
+
+		function resetpoint(username){
+			//get all user
+			const users = document.getElementById('main').querySelectorAll('.user')
+
+			for(const user of users){
+				//get first word div (=point div)
+				const word = user.childNodes[1].childNodes[1].querySelector('.word');
+				word.innerHTML = '점수: 0'
+			}
+		}
+
+		function getpoint(username){
+			return parseInt(document.getElementById(username).childNodes[1].childNodes[1].querySelector('.word').innerHTML.slice(3));
+		}
+
+		//should use
+		function addpoint(username, point){
+			//get first word div (=point div)
+			const word = document.getElementById(username).childNodes[1].childNodes[1].querySelector('.word');
+			word.innerHTML = '점수: ' + (point + getpoint(username)).toString();
+		}
+
+		function subpoint(username, point){
+			//get user_div
+			const user_div = document.getElementById(username);
+
+			addpoint(username, point*(-1));
+		}
+
+		function resetWordLength(username){
+			//get all user
+			const users = document.getElementById('main').querySelectorAll('.user')
+
+			for(const user of users){
+				//get first word div (=point div)
+				const word = user.childNodes[1].childNodes[1].querySelector('.word');
+				word.innerHTML = '길이: 0'
+			}
+		}
+
+		function updateWordLength(username){
+			//get sum of lenght of words
+			const s_lenght = getWordLength(username);
+
+			//get first word div (=lenght div)
+			const word = document.getElementById(username).childNodes[1].childNodes[1].querySelector('.word');
+			word.innerHTML = '길이: ' + (s_lenght).toString();
+
+		}
+
+		function getWordList(username){
+			//get user_div - words div
+			const words = document.getElementById(username).childNodes[1].childNodes[1].querySelectorAll('.word');
+
+			var wordlist = [];
+			for (const word of words) {
+				wordlist.push(word.innerHTML);
+			}
+
+			//remove first element B/C it's score
+			wordlist.shift();
+
+			return wordlist;
+		}
+
+		function getWordLength(username){
+			//get word list
+			const wordlist = getWordList(username);
+			//sum length of words
+			var sum = 0;
+			for (const word of wordlist){
+				sum = sum + word.length;
+			}
+			return sum
+		}
+
+		function addWord(username, wordText) {
+			//get user_div
+			const user_div = document.getElementById(username);
+
+			//create Word div
+			const word_div = document.createElement("div");
+			word_div.className = "word";
+			word_div.appendChild(document.createTextNode(wordText)); //attatch text
+
+			//attatch Word Div to user Div
+			user_div.childNodes[1].childNodes[1].appendChild(word_div);
+
+
+			//make void and attatch to user Div
+			const empty = document.createTextNode(" ");
+			user_div.childNodes[1].childNodes[1].appendChild(empty);
+		}
+
+		function removeWord(username, wordText) {
+			//get user_div
+			const user_div = document.getElementById(username);
+
+			//find word div element by text
+			const words = user_div.childNodes[1].childNodes[1].querySelectorAll('.word');
+			for (const word of words){
+				if (word.innerHTML == wordText){
+					fadeRemove(word);
+					break;
+				}
+			}
+		}
+
+		function clearWord(username) {
+			//get user_div
+			const user_div = document.getElementById(username);
+
+			//find word div element by text 
+				//querySelectorAll will gives a Nodelist, which differs to Array, which doesn't work with shift()
+			var words = Array.from(user_div.childNodes[1].childNodes[1].querySelectorAll('.word'));
+
+			//remove first element B/C it's score
+			words.shift();
+
+			for (const word of words){
+				word.remove();
+			}
+		}
+
+		function clearMessage(username) {
+			//get user_div - message_div
+			const message_div = document.getElementById(username).querySelector('.user_text_box').querySelector('.message');
+
+			//clear user_message_div
+			message_div.innerHTML = "";
+
+			//clear user_message_div_letter
+			for (const letter of message_div.querySelectorAll('.letter')){
+				letter.remove();
+			}
+
+
+		}
+
+		function addMessage(username, message) {
+			//get user_div
+			const user_div = document.getElementById(username);
+
+			const message_div = document.getElementById(username).querySelector('.user_text_box').querySelector('.message');
+			//const message_div = user_div.childNodes[1].childNodes[0];
+
+			clearMessage(username);
+			message_div.innerHTML = message;
+		}
+
+		function addAnimatedMessage(username, message) {
+			//get user_div - message_div
+			const message_div = document.getElementById(username).querySelector('.user_text_box').querySelector('.message');
+			//const message_div = document.getElementById(username).childNodes[1].childNodes[0];
+
+			const texts = message.split("");
+			const delay = 800/texts.length;
+
+			//clear message div
+			clearMessage(username);
+			
+			//add letter
+			for (let i = 0; i < texts.length; i++) {
+				setTimeout( function(){ 
+
+					//create letter
+					const letter = document.createElement("div");
+					letter.className = "letter";
+					letter.appendChild(document.createTextNode(texts[i])); //attatch text
+					message_div.appendChild(letter);
+					//message_div.innerHTML += texts[i];
+
+					//effects
+					setTimeout( function(){
+						shakediv()
+						var audio = new Audio('diykey.wav');
+						audio.play();
+
+					}, 200);  //+ 200 for text animation
+
+
+				}, delay*(i+0.5) );
+			}
+
+		}
+
+		function makeUserDiv(username) {
+			//create user Div
+			const user_div = document.createElement("div");
+			user_div.className = "user";
+			user_div.id = username;
+
+
+
+
+			//create user avatar div
+			const user_avatar_div = document.createElement("div");
+			user_avatar_div.className = "user_avatar";
+
+			//create user avatar - img
+			const avatar_img = document.createElement("img");
+			avatar_img.className = "avatar_img";
+			avatar_img.src = "avatar.png";
+			user_avatar_div.appendChild(avatar_img);
+
+			//create user avatar - text
+			const avatar_text = document.createElement("h1");
+			avatar_text.appendChild(document.createTextNode(username));
+			user_avatar_div.appendChild(avatar_text);
+
+			//append avatar div
+			user_div.appendChild(user_avatar_div);
+
+
+
+
+			//create user text box
+			const user_text_box = document.createElement("div");
+			user_text_box.className = "user_text_box";
+
+			//create user text box - message div
+			const message = document.createElement("div")
+			message.className = "message";
+			user_text_box.appendChild(message);
+
+			//create user text box - words div
+			const words = document.createElement("div")
+			words.className = "words";
+			user_text_box.appendChild(words);
+			
+			//append text box
+			user_div.appendChild(user_text_box);
+
+
+
+			//line
+			const line = document.createElement('hr');
+			document.getElementById("main").appendChild(line);
+
+			document.getElementById("main").appendChild(user_div);
+
+			//add blank word and message
+			addWord(username,":");
+			addMessage(username," ");
+		}
+
+		function removeUserDiv(username) {
+			const user_div = document.getElementById(username);
+			fadeRemove(user_div);
+		}
+
+		function log(text) {
+			console.log(text);
+			//const log_text = document.getElementById("log_text");
+			//log_text.innerHTML = text;
+		}
+		//-------------------------------------------------------------------------------------
+
+        const inputObject = document.getElementById('main_input');
+        var myName = "";
+
+        inputObject.onkeydown = (event) => {
+            if (event.key === "Enter" && inputObject.value !== "") { 
+                //set username and clear input
+                myName = inputObject.value;
+                inputObject.value = "";
+
+                inputObject.placeholder = "단어를 입력해주세요."
+                main();
+            }  
+        };
+
+        //-------------------------
+
+		function main() {
+            const socket = new WebSocket('ws://{your_address}}');
+
+            socket.onopen = (event) => {
+                const msg = { 
+                    type: "visit",
+                    username: myName };
+                socket.send(JSON.stringify(msg));
+            };
+            socket.onclose = (event) => {
+            	inputObject.placeholder = '연결이 끊겼습니다. F5를 눌러 다시 접속해주세요.';
+                log('연결이 끊겼습니다. F5를 눌러 다시 접속해주세요.');
+            };
+
+			
+
+            socket.onmessage = (event) => {
+            	//get data from json
+                const jsondata = JSON.parse(event.data);
+                log(jsondata);
+
+                switch(jsondata.type) {
+                    case "message":
+                    	addMessage(jsondata.username, jsondata.text);
+                        log(jsondata.username + ': ' + jsondata.text);
+                        break;
+                    case "animatedMessage":
+                    	addAnimatedMessage(jsondata.username, jsondata.text);
+                    	break;
+                    case "visit":
+                    	makeUserDiv(jsondata.username);
+                        log(jsondata.username + ' 님이 입장하셨습니다.');
+                        break;
+                    case "exit":
+                    	removeUserDiv(jsondata.username);
+                        log(jsondata.username + ' 님이 퇴장하셨습니다.');
+                        break;
+                    case "list":
+						for (const username of jsondata.data.split(',')){
+							makeUserDiv(username);
+						}
+						break;
+					case "addWord":
+						addWord(jsondata.username, jsondata.text);
+						break;
+					case "removeWord":
+						removeWord(jsondata.username, jsondata.text);
+						break;
+					case "clearWord":
+						clearWord(jsondata.username);
+						break;
+					case "resetpoint":
+						resetpoint(jsondata.username);
+						break;
+					case "addpoint":
+						addpoint(jsondata.username, parseInt(jsondata.point));
+						break;
+					case "subpoint":
+						subpoint(jsondata.username, parseInt(jsondata.point));
+						break;
+					case "resetWordLength":
+						resetWordLength(jsondata.username);
+						break;
+					case "updateWordLength":
+						updateWordLength(jsondata.username);
+						if (getWordLength(jsondata.username) > 150){
+				            const msg = {
+				                type: "fail",
+				                username: myName };
+
+				            socket.send(JSON.stringify(msg));
+						}
+						break;
+					case "error":
+						error(jsondata.username, jsondata.text);
+						break;
+					case "userAnimate":
+						userAnimate(jsondata.username, jsondata.animation, jsondata.durationSec);
+						break;
+					case "maintimer":
+						maintimer(jsondata.time);
+						setTimeout(function(){
+							if (getWordList(myName).length > 0){
+				                const msg = { 
+				                    type: "fail",
+				                    username: myName,
+				                	point: getpoint(myName) };
+
+				                socket.send(JSON.stringify(msg));
+							}
+						}, jsondata.time*1000);
+						break;
+					case "startSuperGame":
+						bgm.play();
+						break;
+					case "stopSuperGame":
+						bgm.currentTime = 0;
+						bgm.pause();
+						break;
+					case "no":
+						log("게임이 진행중입니다.")
+						break;
+                    default:
+                        log(jsondata);
+                        break;
+                }
+
+            };
+
+
+
+            // Enter => sendMessage()
+            inputObject.onkeydown = (event) => {
+                if (event.key === "Enter") { sendMessage(); }  
+            };
+
+            function sendMessage(){
+            	const wordlist = getWordList(myName);
+
+                const msg = { 
+                    type: "message",
+                    text: inputObject.value,
+                    username: myName,
+                	wordlist: wordlist};
+
+                socket.send(JSON.stringify(msg));
+
+                //Clear input after sending
+                inputObject.value = "";
+            }
+        }
+	</script>
+
+</body>
+</html>
