@@ -1,4 +1,8 @@
-https://raw.githubusercontent.com/DDadeA/extream_kkutu/main/%5BSHANA%5D2023-05-27%2022-21-10.mp4
+
+
+https://github.com/DDadeA/extream_kkutu/assets/44233195/95240aaf-8f21-4090-bbc7-e27a05a7317e
+
+
 
 장난으로 만든 끝말잇기 서버. 정말 놀라운 점은, 한 사람이 단어를 입력하면, 그 사람을 제외한 모든 사람이 그 단어를 이어나가야 한다는 점이다. 
 
